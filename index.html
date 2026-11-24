@@ -20,7 +20,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Taktil">
 <meta name="twitter:image" content="https://taktil.app/social.png?v=a812e91a3e">
-<link rel="stylesheet" href="style.css?v=5990f199a2">
+<link rel="preconnect" href="https://stream.mux.com">
+<link rel="stylesheet" href="style.css?v=da46f985fa">
 </head>
 <body>
 <!-- As on sailmode.app: everything on one centre line. The name and how to say it at the very top, mirroring the
@@ -29,10 +30,23 @@
 <header class="site-top"><p class="say"><b>Taktil</b>, pronounced tahk-TEEL</p></header>
 <main class="hero">
   <!-- The headline and the line under it as one block, as wide as the headline: the line under it never reaches
-       further than the headline (style.css). On a phone the headline breaks after "hold". -->
+       further than the headline (style.css). The headline is on two lines, broken after "hold". -->
   <div class="lockup">
     <h1><span>What you hold</span> <span>is what you&nbsp;see.</span></h1>
     <p class="sub">The most lifelike way to see and control your iPhone and iPad on your&nbsp;Mac.</p>
+  </div>
+
+  <!-- The film, played as on sailmode.app: streamed from Mux, playing silently in a loop from the start, with
+       squircle corners and Sailmode's own glass controls (the scripts at the end of the page). sailmode.app has two
+       films that swap; Taktil has one, in the big film's place, at the same size. -->
+  <div class="films">
+    <figure class="film is-big" data-playback="C7j7ycg7aQrUuxz02mEFKNFt02VFQGF1E1p3sVXYqTIN8">
+      <div class="film-clip">
+        <video muted loop playsinline preload="auto"
+               poster="https://image.mux.com/C7j7ycg7aQrUuxz02mEFKNFt02VFQGF1E1p3sVXYqTIN8/thumbnail.webp?time=0&amp;width=1920"
+               aria-label="Taktil: an iPhone turned in the hand, and the same iPhone turning on the Mac"></video>
+      </div>
+    </figure>
   </div>
 </main>
 <footer class="site-foot">
@@ -42,5 +56,197 @@
     <a href="legal/">Legal Notice</a>
   </nav>
 </footer>
+<script>
+  // The film streams from Mux, as on sailmode.app. Safari plays a stream by itself; other browsers get hls.js, a small
+  // open-source player, and only the size the page shows. Some say they can play it themselves and then can't:
+  // hls.js then too. No viewer tracking either way.
+  let hlsLoad;
+  function loadHls() {
+    hlsLoad ??= new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.light.min.js";
+      script.integrity = "sha384-y8wQxRLtNclrHbMBLBLTEkgUrdFu6uWzZiobE1wBE09nt2wHIZlBPvPepdZU4+MM";
+      script.crossOrigin = "anonymous";
+      script.onload = () => resolve(window.Hls);
+      script.onerror = reject;
+      document.head.append(script);
+    });
+    return hlsLoad;
+  }
+  function stream(video) {
+    if (video.dataset.streaming) return;
+    video.dataset.streaming = "1";
+    video.preload = "auto";
+    const source = `https://stream.mux.com/${video.closest(".film").dataset.playback}.m3u8`;
+    const withHls = () => loadHls().then((Hls) => {
+      if (!Hls || !Hls.isSupported()) return;
+      const hls = new Hls({ capLevelToPlayerSize: true });
+      hls.loadSource(source);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => { if (video.closest(".is-big")) video.play().catch(() => {}); });
+    }).catch(() => {});
+    // Safari (on a Mac, iPhone or iPad) plays the stream itself. Others say they can, too, and then can't, so they get
+    // hls.js straight away, rather than half a second later.
+    if (video.canPlayType("application/vnd.apple.mpegurl") && /Apple/.test(navigator.vendor)) {
+      video.addEventListener("error", withHls, { once: true });
+      video.src = source;
+    } else {
+      withHls();
+    }
+  }
+  const firstFilm = document.querySelector(".film.is-big video");
+  stream(firstFilm);
+  firstFilm.play().catch(() => {});
+
+  // The controls bar rises into place on sailmode.app's spring (its site.js): critically damped, a 0.25 s response,
+  // x(t) = 1 − (1 + ωt)·e^(−ωt), sampled for CSS's linear().
+  document.documentElement.style.setProperty("--spring", (() => {
+    const omega = (2 * Math.PI) / 0.25, length = 0.31, steps = 48;
+    const points = Array.from({ length: steps }, (_, i) => {
+      const t = (i / steps) * length;
+      return (1 - (1 + omega * t) * Math.exp(-omega * t)).toFixed(4);
+    });
+    return `linear(${points.join(", ")}, 1)`;
+  })());
+</script>
+<script type="module">
+  // Squircle corners, the continuous curve of iOS, from Lisse (corne.rs), as on sailmode.app.
+  import { generateClipPath, generatePath, getLayoutSize, observeResize } from "https://cdn.jsdelivr.net/npm/@lisse/core@0.7.3/dist/index.js";
+  const film = document.querySelector(".film.is-big");
+  const video = film.querySelector("video");
+  const clip = film.querySelector(".film-clip");
+
+  // The corner radius, from the film's width: as sailmode.app's big film.
+  function shape() {
+    const width = film.offsetWidth, height = film.offsetHeight;
+    if (!width || !height) return;
+    const radius = Math.min(52, Math.max(32, width * 0.056));
+    clip.style.clipPath = generateClipPath(width, height, { radius, smoothing: 0.6 });
+    clip.classList.add("squircle");
+    film.style.borderRadius = `${radius}px`;
+  }
+  shape();
+  observeResize(film, shape);
+
+  // Sailmode's own controls, instead of the browser's.
+  const icons = {
+    play: '<path d="M8 5.6v12.8c0 .9 1 1.4 1.7.9l9.4-6.4c.6-.4.6-1.4 0-1.8L9.7 4.7C9 4.2 8 4.7 8 5.6z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+    pause: '<rect x="6.5" y="5" width="4" height="14" rx="1.6" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.6" fill="currentColor"/>',
+    muted: '<path d="M4 9.5h3l4.5-4v13L7 14.5H4z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M15.5 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    sound: '<path d="M4 9.5h3l4.5-4v13L7 14.5H4z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M15 9a4.2 4.2 0 0 1 0 6M17.6 6.5a7.8 7.8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    full: '<path d="M13.8 10.2l5.7-5.7M13.5 4.5h6v6M10.2 13.8l-5.7 5.7M10.5 19.5h-6v-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  };
+  const svg = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[name]}</svg>`;
+  const clock = (s) => Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "0:00";
+
+  // A small turning circle in the middle of the film while it should be playing and isn't yet: shown only after
+  // `after` milliseconds, so a quick start never flashes it. It goes once the film plays, or is paused.
+  let waitTimer;
+  function expect(after) {
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(() => {
+      if (!video.paused && video.readyState < 3) film.classList.add("is-loading");
+    }, after);
+  }
+  function settle() {
+    clearTimeout(waitTimer);
+    film.classList.remove("is-loading");
+  }
+
+  // The still stays behind the picture: browsers drop a video's still as soon as they know its size, before its
+  // first frame is ready, and show black in between. Its own first frame then simply replaces it.
+  video.style.background = `#000 url("${video.poster}") center / cover no-repeat`;
+  const bar = document.createElement("div");
+  bar.className = "film-controls";
+  bar.setAttribute("role", "group");
+  bar.setAttribute("aria-label", "Video controls");
+  bar.innerHTML = `<button class="fc-play" type="button"></button>
+    <input class="fc-seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Position">
+    <span class="fc-time" aria-hidden="true">0:00</span>
+    <button class="fc-sound" type="button"></button>
+    <button class="fc-full" type="button" aria-label="Full screen">${svg("full")}</button>`;
+  clip.append(bar);
+  const circle = document.createElement("span");
+  circle.className = "film-wait";
+  circle.setAttribute("aria-hidden", "true");
+  clip.append(circle);
+  // The bar is a capsule with the film's squircle curve, its faint white edge (10 %) drawn along that same curve.
+  observeResize(bar, () => {
+    const { width, height } = getLayoutSize(bar);
+    if (!width || !height) return;
+    const curve = { radius: height / 2, smoothing: 0.6 };
+    bar.style.clipPath = generateClipPath(width, height, curve);
+    const edge = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><path d="${generatePath(width, height, curve)}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/></svg>`;
+    bar.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(edge)}")`;
+  });
+  const playButton = bar.querySelector(".fc-play"), seek = bar.querySelector(".fc-seek");
+  const time = bar.querySelector(".fc-time"), sound = bar.querySelector(".fc-sound");
+  let seeking = false, hideTimer;
+
+  // The controls show while the pointer is on the film or after a tap, and while it's paused; otherwise they fade.
+  function showControls(hold = 2200) {
+    film.classList.add("controls-on");
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      // Paused, being dragged or used from the keyboard: they stay.
+      if (video.paused || bar.matches(":focus-within, :active")) return;
+      film.classList.remove("controls-on");
+    }, hold);
+  }
+
+  const paint = () => {
+    playButton.innerHTML = svg(video.paused ? "play" : "pause");
+    playButton.setAttribute("aria-label", video.paused ? "Play" : "Pause");
+    sound.innerHTML = svg(video.muted ? "muted" : "sound");
+    sound.setAttribute("aria-label", video.muted ? "Turn Sound On" : "Turn Sound Off");
+  };
+  const progress = () => {
+    const share = video.duration ? video.currentTime / video.duration : 0;
+    if (!seeking) seek.value = Math.round(share * 1000);
+    seek.style.setProperty("--played", `${(seek.value / 10).toFixed(1)}%`);
+    time.textContent = `${clock(video.currentTime)} / ${clock(video.duration)}`;
+  };
+  paint();
+  ["play", "pause"].forEach((type) => video.addEventListener(type, () => { paint(); showControls(); }));
+  video.addEventListener("playing", settle);
+  video.addEventListener("timeupdate", () => { if (!video.paused && video.currentTime > 0.1) settle(); });
+  // Stuck waiting for the stream mid-film: the circle, if it lasts.
+  video.addEventListener("waiting", () => expect(500));
+  video.addEventListener("pause", settle);
+  let wasMuted = video.muted;
+  video.addEventListener("volumechange", () => {
+    if (video.muted === wasMuted) return;
+    wasMuted = video.muted;
+    paint();
+    showControls();
+  });
+  ["timeupdate", "durationchange", "loadedmetadata"].forEach((type) => video.addEventListener(type, progress));
+
+  playButton.addEventListener("click", () => { video.paused ? video.play().catch(() => {}) : video.pause(); });
+  sound.addEventListener("click", () => { video.muted = !video.muted; });
+  bar.querySelector(".fc-full").addEventListener("click", () => {
+    if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+  });
+  seek.addEventListener("input", () => {
+    seeking = true;
+    if (video.duration) video.currentTime = (seek.value / 1000) * video.duration;
+    progress();
+  });
+  seek.addEventListener("change", () => { seeking = false; });
+
+  // The pointer on the film shows them; a click on the picture plays or pauses, and a first tap on a touch screen
+  // only shows them.
+  film.addEventListener("pointermove", () => showControls());
+  film.addEventListener("pointerleave", () => showControls(600));
+  film.addEventListener("focusin", () => showControls());
+  video.addEventListener("pointerup", (event) => {
+    if (event.pointerType === "touch" && !film.classList.contains("controls-on")) { showControls(); return; }
+    video.paused ? video.play().catch(() => {}) : video.pause();
+  });
+  showControls();
+  // On a slow connection: the circle until it plays.
+  expect(800);
+</script>
 </body>
 </html>

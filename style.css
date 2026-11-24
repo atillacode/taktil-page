@@ -7,6 +7,8 @@
   --ink: #1d1d1f;
   --quiet: #6e6e73;
   --faint: #86868b;
+  /* The film's shadow: sailmode.app's, in grey instead of its sea blue. */
+  --shade: rgba(0, 0, 0, 0.18);
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   color-scheme: light;
 }
@@ -32,19 +34,19 @@ p, h1, h2, ul, figure, address { margin: 0; }
 .site-top .say { font-size: 15px; line-height: 1.4; color: var(--faint); }
 .site-top .say b { font-weight: 600; color: var(--ink); }
 
-/* The home page, as on sailmode.app: the headline and the line under it, centred. With nothing under them yet, they
-   sit in the middle of the screen rather than at sailmode.app's 12 % from the top. */
+/* The home page, as on sailmode.app: the headline and the line under it, centred, then the film. The headline starts
+   about as far down as sailmode.app's icon, 12 % of the screen, counting the name's line above it. */
 .hero {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-  padding: 64px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: max(calc(12vh - 40px), 40px) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
 }
 /* The headline and the line under it, as one block as wide as the headline: the line under it adds nothing to the
    block's width (width 0) and then fills it (min-width 100 %), so it never reaches further than the headline and
    wraps, balanced, where it would. */
 .hero .lockup { max-width: 100%; }
-/* The headline as on bauhausclock.com: large, semibold, tight, on one line on a Mac (96 points from a 1450-point
-   wide window, 13 em wide), over two on a phone, and drawn with a faint gradient, the darkest grey at the top left
-   easing to 70 % of it at the bottom right. */
+/* The headline as on bauhausclock.com: large (96 points from a 1450-point wide window), semibold, tight, and drawn
+   with a faint gradient, the darkest grey at the top left easing to 70 % of it at the bottom right. Always on two
+   lines, broken after "hold"; the line under it then wraps inside the longer one, "is what you see.". */
 .hero h1 {
   font-size: clamp(42px, 6.6vw, 96px); line-height: 1.04; font-weight: 600; letter-spacing: -0.02em;
   color: var(--ink);
@@ -52,14 +54,95 @@ p, h1, h2, ul, figure, address { margin: 0; }
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   padding-bottom: 0.06em;
 }
-@media (max-width: 640px) {
-  .hero h1 span { display: block; }
-}
+.hero h1 span { display: block; }
 /* The line under it, one sentence, growing with the headline at under a third of its size (28 points beside its 96),
    so on a Mac it sits on one line inside the headline's width. */
 .hero .sub {
   width: 0; min-width: 100%; margin: clamp(12px, 1.6vw, 24px) auto 0; text-wrap: balance;
   font-size: clamp(18px, 2vw, 28px); line-height: 1.35; letter-spacing: -0.005em; color: var(--quiet);
+}
+
+/* The film, as on sailmode.app (its style.css, the films), with one film where sailmode.app has two: the big one,
+   playing in the middle of the page, in the middle of three columns whose sides stay empty, so it has the same size
+   as sailmode.app's. On a phone it takes the page's width.
+   Corners are Lisse's squircle (corne.rs) once that has loaded, plain rounded until then. The shadow sits on the
+   film around its clipped picture, rounded to match, as the picture's own would be cut off with its corners. */
+.films {
+  width: min(1400px, 100%); margin-top: 40px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 4.4fr) minmax(0, 1fr); align-items: center;
+  gap: clamp(16px, 2vw, 24px);
+  -webkit-tap-highlight-color: transparent;
+}
+.film { position: relative; margin: 0; border-radius: 44px; box-shadow: 0 6px 18px var(--shade); }
+.film.is-big { grid-row: 1; grid-column: 2; }
+@media (max-width: 720px) {
+  .films { grid-template-columns: minmax(0, 1fr); }
+  .film.is-big { grid-column: 1; }
+}
+.film-clip { position: relative; overflow: hidden; border-radius: inherit; }
+.film-clip.squircle { border-radius: 0; }
+.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+/* The loading circle: white, a quarter of it bright, turning, in the middle of the film. */
+.film-wait {
+  position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px;
+  border: 2.5px solid rgba(255, 255, 255, 0.28); border-top-color: #fff; border-radius: 50%;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
+  opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+  animation: film-wait 0.9s linear infinite paused;
+}
+.film.is-loading .film-wait { opacity: 1; animation-play-state: running; }
+@keyframes film-wait { to { rotate: 360deg; } }
+
+/* The film's own controls, Sailmode's instead of the browser's: one glass bar, well inside the film's corners, with
+   play or pause, where it is, the time, sound and full screen. They show while the pointer is on the film or after a
+   tap, and while it's paused; otherwise they fade away. The buttons sit as far from the bar's ends as from its top
+   and bottom, each one's circle centred in the rounded end. */
+.film-controls {
+  position: absolute; left: var(--controls-inset); right: var(--controls-inset); bottom: var(--controls-inset);
+  --controls-inset: clamp(16px, 2.4vw, 24px);
+  display: flex; align-items: center; gap: 4px; height: 48px; padding: 0 6px;
+  border-radius: 24px; color: #fff;
+  background: rgba(20, 24, 28, 0.42) no-repeat;
+  -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6);
+  opacity: 0; translate: 0 8px; pointer-events: none;
+  transition: opacity 0.22s ease, translate 0.42s var(--spring, ease-out);
+}
+.film.is-big.controls-on .film-controls { opacity: 1; translate: none; pointer-events: auto; }
+.film-controls button {
+  flex: none; display: grid; place-items: center; width: 36px; height: 36px; margin: 0; padding: 0; border: 0;
+  border-radius: 18px; background: none; color: inherit; cursor: pointer;
+}
+.film-controls button:hover { background: rgba(255, 255, 255, 0.14); }
+.film-controls button:focus-visible, .film-controls input:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.film-controls svg { width: 20px; height: 20px; }
+.film-controls .fc-time {
+  flex: none; min-width: 4.6em; padding: 0 6px; font-size: 13px; font-variant-numeric: tabular-nums;
+  text-align: center; opacity: 0.9;
+}
+/* Where the film is: a thin white line, its played part full white. */
+.film-controls input[type="range"] {
+  flex: 1 1 auto; min-width: 0; height: 36px; margin: 0 6px; background: none; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  --played: 0%;
+}
+.film-controls input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(to right, #fff var(--played), rgba(255, 255, 255, 0.32) var(--played));
+}
+.film-controls input[type="range"]::-moz-range-track {
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(to right, #fff var(--played), rgba(255, 255, 255, 0.32) var(--played));
+}
+.film-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 12px; height: 12px; margin-top: -4px; border: 0;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.film-controls input[type="range"]::-moz-range-thumb {
+  width: 12px; height: 12px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+@media (max-width: 480px) {
+  .film-controls { height: 44px; padding: 0 4px; gap: 2px; }
+  .film-controls .fc-time { display: none; }
 }
 
 /* The footer, as on sailmode.app: small, centred, who made it on a line of its own, then the legal pages, smaller

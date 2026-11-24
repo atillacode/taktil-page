@@ -1,7 +1,7 @@
-/* Taktil's look: dark grey on white, like the White Studio it shows the device in, and like delight.software.
-   Light only, on purpose. No true black anywhere: the darkest colour is a grey so dark it reads as black.
-   Everything sits on one centre line, as on sailmode.app: the name, the headline, the line under it, the device,
-   and four short lines on what makes it different. Nothing on the page moves but the links. */
+/* Taktil's look: sailmode.app's layout in delight.software's colours, dark grey on white, like the White Studio it
+   shows the device in. Light only, on purpose. No true black anywhere: the darkest colour is a grey so dark it reads
+   as black. Everything sits on one centre line, as on sailmode.app, with its type sizes: the headline, the line
+   under it, a small line, and the footer. Nothing on the page moves but the links. */
 :root {
   --paper: #ffffff;
   --ink: #1d1d1f;
@@ -21,23 +21,49 @@ body {
   background: var(--paper); color: var(--ink);
   font-family: var(--font); -webkit-font-smoothing: antialiased;
 }
-p, h1, h2, ul, figure { margin: 0; }
+p, h1, h2, ul, figure, address { margin: 0; }
 
-/* The home page, for now: the headline alone, in the middle of the screen, the footer under it. */
+/* The name and how to say it, small and centred at the very top of the page, as far from the top as the footer's
+   last line is from the bottom: the name in the darkest grey and bolder, the rest in the lightest. */
+.site-top {
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  text-align: center;
+}
+.site-top .say { font-size: 15px; line-height: 1.4; color: var(--faint); }
+.site-top .say b { font-weight: 600; color: var(--ink); }
+
+/* The home page, as on sailmode.app: the headline and the line under it, centred. With nothing under them yet, they
+   sit in the middle of the screen rather than at sailmode.app's 12 % from the top. */
 .hero {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-  padding: max(56px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  padding: 64px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
 }
-/* One sentence: on one line where it fits, on a phone over two balanced ones. */
+/* The headline and the line under it, as one block as wide as the headline: the line under it adds nothing to the
+   block's width (width 0) and then fills it (min-width 100 %), so it never reaches further than the headline and
+   wraps, balanced, where it would. */
+.hero .lockup { max-width: 100%; }
+/* The headline as on bauhausclock.com: large, semibold, tight, on one line on a Mac (96 points from a 1450-point
+   wide window, 13 em wide), over two on a phone, and drawn with a faint gradient, the darkest grey at the top left
+   easing to 70 % of it at the bottom right. */
 .hero h1 {
-  text-wrap: balance;
-  font-size: clamp(34px, 6vw, 64px); line-height: 1.06; font-weight: 600; letter-spacing: -0.028em;
+  font-size: clamp(42px, 6.6vw, 96px); line-height: 1.04; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--ink);
+  background: linear-gradient(140deg, var(--ink) 0%, rgba(29, 29, 31, 0.7) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  padding-bottom: 0.06em;
 }
-/* How to say the name, small and quiet under it. */
-.hero .say { margin-top: 18px; font-size: 15px; line-height: 1.4; color: var(--faint); }
+@media (max-width: 640px) {
+  .hero h1 span { display: block; }
+}
+/* The line under it, one sentence, growing with the headline at under a third of its size (28 points beside its 96),
+   so on a Mac it sits on one line inside the headline's width. */
+.hero .sub {
+  width: 0; min-width: 100%; margin: clamp(12px, 1.6vw, 24px) auto 0; text-wrap: balance;
+  font-size: clamp(18px, 2vw, 28px); line-height: 1.35; letter-spacing: -0.005em; color: var(--quiet);
+}
 
-/* The footer, small, centred, as on sailmode.app: who made it, then the legal pages, smaller and in the lightest
-   grey. */
+/* The footer, as on sailmode.app: small, centred, who made it on a line of its own, then the legal pages, smaller
+   and in the lightest grey. */
 .site-foot {
   margin-top: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px;
   padding: 56px max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
@@ -48,11 +74,12 @@ p, h1, h2, ul, figure { margin: 0; }
 .site-foot .legal a { color: var(--faint); font-weight: 400; transition: color 0.1s ease, --underline 0.1s ease; }
 .site-foot .legal a:is(:hover, :focus-visible) { color: var(--quiet); --underline: var(--quiet); }
 
-/* The legal pages: Taktil at the top as the way home, then the text, left-aligned. */
+/* The legal pages, as on sailmode.app: Taktil at the top as the way home, then the text, left-aligned in a centred
+   column. */
 .doc-top {
   width: min(720px, 100% - 32px); margin: 0 auto;
   padding-top: max(56px, env(safe-area-inset-top));
-  font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+  font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
 }
 .doc-top a { font-weight: 600; }
 .doc {

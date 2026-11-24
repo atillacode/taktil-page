@@ -6,9 +6,9 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
 <title>Taktil: your iPhone, iPad or iPhone Duo, live in 3D on your Mac</title>
-<meta name="description" content="Taktil puts the iPhone, iPad or iPhone Duo in your hand on your Mac, live and in 3D. Turn it in your hand, and it turns on your Mac.">
+<meta name="description" content="What you hold is what you see. The most lifelike way to see and control your iPhone and iPad on your Mac.">
 <meta property="og:title" content="Taktil">
-<meta property="og:description" content="What you hold is what you see. Your iPhone, iPad or iPhone Duo, live and in 3D on your Mac.">
+<meta property="og:description" content="What you hold is what you see. The most lifelike way to see and control your iPhone and iPad on your Mac.">
 <meta property="og:type" content="website">
 <!-- https://taktil.app/ becomes the site's address when publish.sh puts the page online (the domain in CNAME). -->
 <meta property="og:url" content="https://taktil.app/">
@@ -20,14 +20,20 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Taktil">
 <meta name="twitter:image" content="https://taktil.app/social.png?v=a812e91a3e">
-<link rel="stylesheet" href="style.css?v=a78fb7e92c">
+<link rel="stylesheet" href="style.css?v=5990f199a2">
 </head>
 <body>
-<!-- For now the headline only, in the middle of the screen, and under it how to say the name. The line under the
-     headline, the device and the four points come back later: see "Not there yet" in README.md. -->
+<!-- As on sailmode.app: everything on one centre line. The name and how to say it at the very top, mirroring the
+     footer at the very bottom; between them the headline and the line under it, in the middle of the screen while
+     nothing is under them yet. The device and the four points come back later: see "Not there yet" in README.md. -->
+<header class="site-top"><p class="say"><b>Taktil</b>, pronounced tahk-TEEL</p></header>
 <main class="hero">
-  <h1>What you hold is what you&nbsp;see.</h1>
-  <p class="say">Taktil, pronounced tahk-TEEL.</p>
+  <!-- The headline and the line under it as one block, as wide as the headline: the line under it never reaches
+       further than the headline (style.css). On a phone the headline breaks after "hold". -->
+  <div class="lockup">
+    <h1><span>What you hold</span> <span>is what you&nbsp;see.</span></h1>
+    <p class="sub">The most lifelike way to see and control your iPhone and iPad on your&nbsp;Mac.</p>
+  </div>
 </main>
 <footer class="site-foot">
   <p class="credit">Made with care by <a href="https://x.com/_atilla1">Atilla</a></p>
